@@ -1,3 +1,9 @@
+> Pennywise is not maintained, check out my other project [Always on Top](https://alwaysontop.app)
+
+<a href="https://alwaysontop.app"><img width="3840" height="834" alt="image" src="https://github.com/user-attachments/assets/fcfdf251-0f4f-4a2a-a0f3-d8421c878f4f" /></a>
+
+<br /><br />
+
 <p align="center">
   <img src="https://i.imgur.com/bKsns66.png" height="148">
   <h2 align="center">Pennywise</h2>
