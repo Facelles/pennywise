@@ -29,7 +29,8 @@
     "_electron": "nodemon --exec \"cross-env APP_URL=http://localhost:9999 electron .\" --ext js --watch public/",
     "_build": "react-scripts build",
     "start": "concurrently \"yarn _react\" \"wait-on http://localhost:9999 && yarn _electron\" ",
-    "build": "yarn _build && build --mac --win --linux --x64 --ia32 -p always",
+    "build": "yarn _build && electron-builder --mac --x64 --arm64",
+    "dist": "yarn _build && electron-builder --mac --x64 --arm64",
     "icons": "electron-icon-maker -i public/img/pennywise.png -o public"
   },
   "eslintConfig": {
