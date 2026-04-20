@@ -1,35 +1,36 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
+import React, { Component } from "react";
+import PropTypes from "prop-types";
 
-import './style.scss';
-import Settings from '../settings';
+import "./style.scss";
+import Settings from "../settings";
 
-const os = window.require('os');
-const { ipcRenderer } = window.require('electron');
+// Use electronAPI instead of direct electron require
+const electronAPI = window.electronAPI;
+const platform = navigator.platform ? navigator.platform.toLowerCase() : "";
 
 class NavBar extends Component {
   urlInput = React.createRef();
-  platform = (os.platform() || '').toLowerCase();
+  platform = platform;
   state = {
     url: this.props.url,
-    settingsShown: false
+    settingsShown: false,
   };
 
   toggleSettings = () => {
     this.setState((state) => ({
-      settingsShown: !state.settingsShown
+      settingsShown: !state.settingsShown,
     }));
   };
 
   onChange = (e) => {
     this.setState({
-      url: e.target.value
+      url: e.target.value,
     });
   };
 
   onKeyPress = (e) => {
     // Move to URL and blur the input
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       this.props.onUrl(e.target.value);
       e.target.blur();
     }
@@ -46,11 +47,15 @@ class NavBar extends Component {
   };
 
   componentDidMount() {
-    ipcRenderer.on('nav.focus', this.focusUrlInput);
+    if (electronAPI) {
+      electronAPI.on("nav.focus", this.focusUrlInput);
+    }
   }
 
   componentWillUnmount() {
-    ipcRenderer.removeListener('nav.focus', this.focusUrlInput);
+    if (electronAPI) {
+      electronAPI.removeEventListener("nav.focus", this.focusUrlInput);
+    }
   }
 
   // Check if there's a url update, and set state accordingly so
@@ -58,8 +63,8 @@ class NavBar extends Component {
   componentDidUpdate(prevProps) {
     if (this.props.url !== prevProps.url) {
       this.setState({
-        url: this.props.url
-      })
+        url: this.props.url,
+      });
     }
   }
 
@@ -69,17 +74,27 @@ class NavBar extends Component {
    */
   renderSettings() {
     // Only windows and mac support window opacity
-    const supportsOpacity = this.platform === 'darwin' || /^win/.test(this.platform);
+    const supportsOpacity =
+      platform === "darwin" ||
+      /^win/.test(platform) ||
+      navigator.userAgent.indexOf("Windows") !== -1;
     if (!supportsOpacity) {
       return null;
     }
 
     return (
       <div className="settings-btn">
-        <button className="btn-action btn btn-dark" onClick={ this.toggleSettings }>
-          { !this.state.settingsShown ? <i className="fa fa-cog"/> : <i className="fa fa-times-circle"/> }
+        <button
+          className="btn-action btn btn-dark"
+          onClick={this.toggleSettings}
+        >
+          {!this.state.settingsShown ? (
+            <i className="fa fa-cog" />
+          ) : (
+            <i className="fa fa-times-circle" />
+          )}
         </button>
-        { this.state.settingsShown && <Settings/> }
+        {this.state.settingsShown && <Settings />}
       </div>
     );
   }
@@ -87,22 +102,42 @@ class NavBar extends Component {
   render() {
     return (
       <>
-        <div className='top-nav'>
-          <button className="btn-action btn btn-dark d-none d-sm-block d-md-block d-lg-block d-xl-block" onClick={ this.props.onBack }><i className="fa fa-arrow-left"/></button>
-          <button className="btn-action btn btn-dark d-none d-sm-block d-md-block d-lg-block d-xl-block" onClick={ this.props.onForward }><i className="fa fa-arrow-right"/></button>
-          <button className="btn-action btn btn-dark" onClick={ this.props.onReload }><i className="fa fa-refresh"/></button>
+        <div className="top-nav">
+          <button
+            className="btn-action btn btn-dark d-none d-sm-block d-md-block d-lg-block d-xl-block"
+            onClick={this.props.onBack}
+          >
+            <i className="fa fa-arrow-left" />
+          </button>
+          <button
+            className="btn-action btn btn-dark d-none d-sm-block d-md-block d-lg-block d-xl-block"
+            onClick={this.props.onForward}
+          >
+            <i className="fa fa-arrow-right" />
+          </button>
+          <button
+            className="btn-action btn btn-dark"
+            onClick={this.props.onReload}
+          >
+            <i className="fa fa-refresh" />
+          </button>
           <input
-            ref={ this.urlInput }
-            className='search-input'
+            ref={this.urlInput}
+            className="search-input"
             type="text"
-            placeholder='Enter the URL to load'
-            value={ this.state.url }
-            onChange={ this.onChange }
-            onKeyPress={ this.onKeyPress }
-            onFocus={ this.onFocus }
+            placeholder="Enter the URL to load"
+            value={this.state.url}
+            onChange={this.onChange}
+            onKeyPress={this.onKeyPress}
+            onFocus={this.onFocus}
           />
-          <button className="btn-action btn btn-danger btn-go" onClick={ () => this.props.onUrl('') }><i className='fa fa-times'/></button>
-          { this.renderSettings() }
+          <button
+            className="btn-action btn btn-danger btn-go"
+            onClick={() => this.props.onUrl("")}
+          >
+            <i className="fa fa-times" />
+          </button>
+          {this.renderSettings()}
         </div>
       </>
     );

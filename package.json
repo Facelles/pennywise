@@ -20,18 +20,17 @@
     "query-string": "^6.7.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
-    "react-scripts": "3.0.1",
+    "react-scripts": "^5.0.1",
     "url-parse": "^1.4.7",
     "yargs": "^13.2.4"
   },
   "scripts": {
-    "_react": "cross-env BROWSER=none react-scripts start",
-    "_electron": "nodemon --exec \"cross-env APP_URL=http://localhost:3000 electron .\" --ext js --watch public/",
+    "_react": "cross-env BROWSER=none PORT=9999 react-scripts start",
+    "_electron": "nodemon --exec \"cross-env APP_URL=http://localhost:9999 electron .\" --ext js --watch public/",
     "_build": "react-scripts build",
-    "start": "concurrently \"yarn _react\" \"wait-on http://localhost:3000 && yarn _electron\" ",
+    "start": "concurrently \"yarn _react\" \"wait-on http://localhost:9999 && yarn _electron\" ",
     "build": "yarn _build && build --mac --win --linux --x64 --ia32 -p always",
-    "icons": "electron-icon-maker -i public/img/pennywise.png -o public",
-    "test": "mocha"
+    "icons": "electron-icon-maker -i public/img/pennywise.png -o public"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -102,16 +101,14 @@
   "devDependencies": {
     "concurrently": "^4.1.0",
     "cross-env": "^5.2.0",
-    "electron": "^5.0.3",
-    "electron-builder": "^20.43.0",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.6.4",
     "electron-icon-maker": "^0.0.4",
     "jquery": "^3.4.1",
-    "mocha": "^6.1.4",
-    "node-sass": "^4.12.0",
     "nodemon": "^1.19.1",
     "popper.js": "^1.15.0",
-    "spectron": "^5.0.0",
-    "wait-on": "^3.2.0",
-    "typescript": "^3.6.4"
+    "sass": "^1.89.2",
+    "typescript": "^3.6.4",
+    "wait-on": "^3.2.0"
   }
 }

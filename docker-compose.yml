@@ -1,0 +1,47 @@
+version: "3.8"
+
+services:
+  pennywise:
+    build: .
+    container_name: pennywise-app
+    ports:
+      - "9999:9999"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    environment:
+      - NODE_ENV=development
+      - NODE_OPTIONS=--openssl-legacy-provider
+      - SKIP_PREFLIGHT_CHECK=true
+      - PORT=9999
+      - DISPLAY=:99
+    stdin_open: true
+    tty: true
+    privileged: true
+    networks:
+      - pennywise-network
+
+  # Production build service
+  pennywise-prod:
+    build: .
+    container_name: pennywise-prod
+    ports:
+      - "9999:9999"
+    environment:
+      - NODE_ENV=production
+      - NODE_OPTIONS=--openssl-legacy-provider
+      - SKIP_PREFLIGHT_CHECK=true
+      - PORT=9999
+      - DISPLAY=:99
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    privileged: true
+    networks:
+      - pennywise-network
+    profiles:
+      - production
+
+networks:
+  pennywise-network:
+    driver: bridge

@@ -1,6 +1,5 @@
 import isUrl from 'is-url';
 import parseUrl from 'url-parse';
-import queryString from 'query-string';
 
 /**
  * Prepares the embed-able URL for the given youtube URL
@@ -8,29 +7,9 @@ import queryString from 'query-string';
  * @return {*}
  */
 const prepareYoutubeUrl = (url) => {
-  const parsedUrl = parseUrl(url, true);
-  if (!parsedUrl.host.includes('youtube.com') && !parsedUrl.host.includes('youtu.be')) {
-    return url;
-  }
-
-  const queryParams = parsedUrl.query || {};
-  let videoHash = queryParams.v || parsedUrl.pathname;
-
-  // Remove slashes – pathname is prefixed with slash
-  videoHash = videoHash.replace(/\//g, '');
-  // Empty URL or already an embed link
-  if (!videoHash || videoHash.includes('embed')) {
-    return url;
-  }
-
-  // Remove the video hash from query string if available
-  // we have the hash already, it will be used in embed code
-  delete queryParams.v;
-  delete queryParams.index;
-
-  queryParams.autoplay = 1;
-
-  return `https://www.youtube.com/embed/${videoHash}?${queryString.stringify(queryParams)}`;
+  // Let the webview handle standard YouTube links natively to avoid Error 152/153
+  // and we'll inject CSS/JS to hide the UI instead of relying on /embed/ which gets blocked
+  return url;
 };
 
 /**

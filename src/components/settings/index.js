@@ -1,27 +1,34 @@
-import React from 'react';
-import debounce from 'lodash.debounce';
+import React from "react";
+import debounce from "lodash.debounce";
 
-import './style.scss';
+import "./style.scss";
 
-const { ipcRenderer } = window.require('electron');
+// Use electronAPI instead of direct electron require
+const electronAPI = window.electronAPI;
 
 class Settings extends React.Component {
   state = {
-    opacity: ipcRenderer.sendSync('opacity.get')
+    opacity: electronAPI ? electronAPI.getOpacity() : 100,
   };
 
   componentDidMount() {
-    ipcRenderer.on('opacity.sync', this.onOpacitySync);
+    if (electronAPI) {
+      electronAPI.on("opacity.sync", this.onOpacitySync);
+    }
   }
 
   componentWillUnmount() {
-    ipcRenderer.removeListener('opacity.sync', this.onOpacitySync);
+    if (electronAPI) {
+      electronAPI.removeEventListener("opacity.sync", this.onOpacitySync);
+    }
   }
 
   // Debounce the setter so to avoid bombarding
   // electron with the opacity change requests
   setOpacity = debounce((opacity) => {
-    ipcRenderer.send('opacity.set', opacity);
+    if (electronAPI) {
+      electronAPI.setOpacity(opacity);
+    }
   }, 400);
 
   onOpacitySync = (event, opacity) => {
@@ -30,7 +37,7 @@ class Settings extends React.Component {
 
   onOpacityChange = (e) => {
     this.setState({
-      opacity: e.target.value
+      opacity: e.target.value,
     });
 
     this.setOpacity(e.target.value);
@@ -38,11 +45,21 @@ class Settings extends React.Component {
 
   render() {
     return (
-      <div className='settings-wrap'>
+      <div className="settings-wrap">
         <div className="setting-controls">
           <div className="setting-control opacity-picker">
-            <label htmlFor="opacity-picker"><i className="fa fa-lightbulb-o"/></label>
-            <input type="range" onChange={ this.onOpacityChange } value={ this.state.opacity } min="20" max="100" className="slider" id="opacity-picker"/>
+            <label htmlFor="opacity-picker">
+              <i className="fa fa-lightbulb-o" />
+            </label>
+            <input
+              type="range"
+              onChange={this.onOpacityChange}
+              value={this.state.opacity}
+              min="20"
+              max="100"
+              className="slider"
+              id="opacity-picker"
+            />
           </div>
         </div>
       </div>
