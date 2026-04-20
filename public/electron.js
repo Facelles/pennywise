@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, globalShortcut } = require("electron");
 const { autoUpdater } = require("electron-updater");
 const pdfWindow = require("electron-pdf-window");
 const path = require("path");
@@ -16,6 +16,12 @@ let mainWindow;
 
 // Allow videos to autoplay without user gesture (fixes YouTube Error 152 from autoplay constraints)
 app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
+
+// Performance: enable hardware video decoding and prevent background throttling
+app.commandLine.appendSwitch("enable-features", "VaapiVideoDecoder,VaapiVideoEncoder");
+app.commandLine.appendSwitch("disable-renderer-backgrounding"); // Keep video running when window is not focused
+app.commandLine.appendSwitch("disable-background-timer-throttling"); // Prevent JS timers from slowing down
+app.commandLine.appendSwitch("enable-gpu-rasterization"); // GPU-accelerated rendering
 
 // Add flash support. If $USER_HOME/.pennywise-flash exists as plugin directory or symlink uses that.
 const flashPath = path.join(os.homedir(), ".pennywise-flash");
@@ -50,6 +56,7 @@ function createWindow() {
       webSecurity: true,
       webviewTag: true,
       allowRunningInsecureContent: false,
+      backgroundThrottling: false,     // Keep rendering even when window is behind other apps
       preload: path.join(__dirname, "preload.js"),
     },
   });
@@ -88,13 +95,25 @@ function createWindow() {
     mainWindow = null;
   });
 
-  // Open the dev tools only for dev
-  // and when the flag is not set
+  // Open the dev tools only for dev and when the flag is not set
   if (isDev && !process.env.DEV_TOOLS) {
     mainWindow.webContents.openDevTools();
   }
 
   setMainMenu(mainWindow);
+
+  // Global shortcut: Cmd+Shift+X — toggle click-through (ghost/detach mode)
+  // The window becomes transparent to mouse clicks so you can interact with apps behind it
+  globalShortcut.unregisterAll();
+  let isClickThrough = false;
+  globalShortcut.register("CommandOrControl+Shift+X", () => {
+    if (!mainWindow) return;
+    isClickThrough = !isClickThrough;
+    mainWindow.setIgnoreMouseEvents(isClickThrough, { forward: true });
+    // Visual indicator: slightly reduce opacity when in click-through mode
+    mainWindow.setOpacity(isClickThrough ? 0.85 : 1.0);
+    app.dock && app.dock.setBadge(isClickThrough ? "👻" : "");
+  });
 }
 
 // Binds the methods for renderer/electron communication
@@ -129,6 +148,8 @@ function disableDetachedMode() {
 }
 
 function checkAndDownloadUpdate() {
+  // Only check for updates in packaged production builds
+  if (!app.isPackaged) return;
   try {
     autoUpdater.checkForUpdatesAndNotify();
   } catch (e) {
@@ -198,7 +219,7 @@ app.on("ready", function () {
 
 // Make the window start receiving mouse events on focus/activate
 app.on("browser-window-focus", disableDetachedMode);
-app.on("activate", disableDetachedMode);
+// Note: do NOT call disableDetachedMode on activate – it would cancel the Cmd+Shift+X ghost mode
 
 // Quit when all windows are closed.
 app.on("window-all-closed", function () {
@@ -211,4 +232,9 @@ app.on("activate", function () {
   if (mainWindow === null) {
     createWindow();
   }
+});
+
+// Unregister all shortcuts when the app quits to avoid leaks
+app.on("will-quit", () => {
+  globalShortcut.unregisterAll();
 });
