@@ -59,6 +59,9 @@ class WebPage extends React.Component {
       this.setState({
         url: event.url,
       });
+      if (electronAPI) {
+        electronAPI.send("history.add", event.url);
+      }
     });
 
     // Also handle in-page navigation
